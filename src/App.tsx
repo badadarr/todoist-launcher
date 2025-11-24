@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useTaskStore } from './store/useTaskStore';
-import { Inbox, Target } from 'lucide-react';
+import { Inbox, Target, FileText } from 'lucide-react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { TaskInput } from './components/TaskInput';
 import { SectionHeader } from './components/SectionHeader';
 import { FocusMode } from './components/FocusMode';
 import { TaskCard } from './components/TaskCard';
 import { AlertDialog } from './components/AlertDialog';
+import { ReputationBar } from './components/ReputationBar';
 
 // --- KOMPONEN MAIN APP ---
 function App() {
-  const { tasks, isFocusMode, activeTaskId, addTask, moveToToday, moveToBacklog, startFocus, completeTask, stopEarly, deleteTask, alertDialog, clearAlert } = useTaskStore();
+  const { 
+    tasks, isFocusMode, activeTaskId, lockoutUntil,
+    addTask, moveToToday, moveToBacklog, startFocus, 
+    completeTask, stopEarly, deleteTask, 
+    alertDialog, clearAlert, exportTaskReport, shareCommitment, showAlert 
+  } = useTaskStore();
   const [input, setInput] = useState('');
 
   // Fullscreen effect
@@ -51,8 +57,9 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-zinc-950 text-zinc-200 font-sans overflow-hidden">
+      <ReputationBar />
       {/* Inbox Section */}
-      <div className="flex-1 flex flex-col border-r border-zinc-900 p-6 md:p-8 bg-black overflow-hidden">
+      <div className="flex-1 flex flex-col border-r border-zinc-900 p-6 md:p-8 bg-black overflow-hidden mt-12">
         <SectionHeader
           icon={Inbox}
           title="GUDANG IDE"
@@ -83,13 +90,27 @@ function App() {
       </div>
 
       {/* Today Section */}
-      <div className="flex-1 flex flex-col p-6 md:p-8 bg-zinc-950 overflow-hidden">
-        <SectionHeader
-          icon={Target}
-          title="FOKUS HARI INI"
-          count={todayTasks.length}
-          maxCount={MAX_TODAY_TASKS}
-        />
+      <div className="flex-1 flex flex-col p-6 md:p-8 bg-zinc-950 overflow-hidden mt-12">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3 text-zinc-500">
+            <Target size={20} />
+            <h2 className="font-bold text-xs tracking-widest">FOKUS HARI INI</h2>
+            <div className="text-xs font-mono text-zinc-500 ml-2">
+              {todayTasks.length} / {MAX_TODAY_TASKS}
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const report = exportTaskReport();
+              navigator.clipboard.writeText(report);
+              showAlert('Laporan Tersalin', 'Laporan harian berhasil disalin ke clipboard!');
+            }}
+            className="text-xs px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5"
+          >
+            <FileText size={14} />
+            Export Report
+          </button>
+        </div>
 
         <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
           {todayTasks.map(task => (

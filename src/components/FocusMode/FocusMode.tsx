@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, Lock } from 'lucide-react';
+import { CheckCircle, XCircle, Lock, Share2 } from 'lucide-react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { Task } from '../../types';
 import { FocusTimer } from '../FocusTimer/FocusTimer';
 import { ExitModal } from '../ExitModal/ExitModal';
+import { useTaskStore } from '../../store/useTaskStore';
 
 interface FocusModeProps {
   activeTask: Task;
@@ -14,6 +15,7 @@ interface FocusModeProps {
 export const FocusMode = ({ activeTask, onComplete, onExit }: FocusModeProps) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [exitReason, setExitReason] = useState('');
+  const { shareCommitment } = useTaskStore();
 
   // Fullscreen effect
   useState(() => {
@@ -48,9 +50,17 @@ export const FocusMode = ({ activeTask, onComplete, onExit }: FocusModeProps) =>
         {activeTask.title}
       </h1>
 
-      <p className="text-zinc-400 mb-16 text-sm italic text-center max-w-2xl">
+      <p className="text-zinc-400 mb-8 text-sm italic text-center max-w-2xl">
         "Fokus pada satu hal ini sampai selesai. Jika harus berhenti, catat progress yang sudah dicapai."
       </p>
+
+      <button
+        onClick={() => shareCommitment(activeTask.title)}
+        className="mb-8 px-4 py-2 text-xs text-zinc-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-2 border border-zinc-200"
+      >
+        <Share2 size={14} />
+        Share Commitment
+      </button>
 
       <div className="flex gap-6 flex-wrap justify-center">
         <button

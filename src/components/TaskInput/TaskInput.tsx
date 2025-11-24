@@ -16,7 +16,7 @@ export const TaskInput = ({ value, onChange, onSubmit }: TaskInputProps) => (
     />
     <button
       type="submit"
-      className="absolute right-3 top-3.5 text-zinc-500 hover:text-white transition-colors"
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
       aria-label="Add task"
     >
       <Plus size={20} />

@@ -61,7 +61,7 @@ export const TaskCard = ({ task, onMoveToBacklog, onStartFocus, onDelete, onMove
           {onStartFocus && (
             <button
               onClick={() => onStartFocus(task.id)}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-medium flex gap-2 transition-transform hover:scale-105"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-transform hover:scale-105"
             >
               <Play size={14} fill="currentColor" /> MULAI
             </button>
