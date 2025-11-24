@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  background-color: #09090b; /* Hitam Elegan */
+  color: #e4e4e7;
+  overflow: hidden; /* Mencegah scroll bar dobel */
+}
+
+/* Styling Scrollbar Custom */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px; /* Lebar scrollbar tipis */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #27272a; /* Warna Zinc-800 */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #3f3f46; /* Warna Zinc-700 saat di-hover */
+}
+
+/* Hilangkan outline fokus biru standar di Chrome saat klik button */
+button:focus {
+  outline: none;
+}
