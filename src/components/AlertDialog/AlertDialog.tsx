@@ -28,8 +28,10 @@ export const AlertDialog = ({ isOpen, onClose, title, content }: AlertDialogProp
             <h3 className="text-lg font-semibold text-zinc-200">{title}</h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-zinc-500 hover:text-zinc-300"
+            aria-label="Close dialog"
           >
             <X size={20} />
           </button>
@@ -39,6 +41,7 @@ export const AlertDialog = ({ isOpen, onClose, title, content }: AlertDialogProp
         </div>
         <div className="mt-6 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
             className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm"
           >

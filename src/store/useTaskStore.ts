@@ -60,7 +60,7 @@ export const useTaskStore = create<TaskState>()(
       reputationScore: 100,
       lastActiveDate: Date.now(),
 
-      addTask: (title, isMainIdea = false, parentId = null) =>
+      addTask: (title, isMainIdea = false, parentId = undefined) =>
         set((state) => ({
           tasks: [
             {
@@ -305,3 +305,5 @@ ${todayTasks.map(t => `- ${t.title}: ${t.status === 'done' ? '[DONE]' : '[FAIL]'
     { name: "focus-app-storage-v6" } // v6: Added estimation, analytics, and time tracking
   )
 );
+export type { Task };
+

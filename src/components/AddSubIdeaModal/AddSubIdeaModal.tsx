@@ -39,8 +39,10 @@ export const AddSubIdeaModal = ({ isOpen, onClose, onAdd, parentTitle }: AddSubI
             <h3 className="text-lg font-semibold text-zinc-200">Tambah Sub Ide</h3>
           </div>
           <button
+            type="button"
             onClick={handleClose}
             className="text-zinc-500 hover:text-zinc-300"
+            aria-label="Close dialog"
           >
             <X size={20} />
           </button>
