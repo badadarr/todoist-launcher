@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, Lock, Share2 } from 'lucide-react';
+import { CheckCircle, XCircle, Lock, Share2, FolderOpen } from 'lucide-react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { Task } from '../../types';
 import { FocusTimer } from '../FocusTimer/FocusTimer';
@@ -15,7 +15,11 @@ interface FocusModeProps {
 export const FocusMode = ({ activeTask, onComplete, onExit }: FocusModeProps) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [exitReason, setExitReason] = useState('');
-  const { shareCommitment } = useTaskStore();
+  const { shareCommitment, tasks, getProgress } = useTaskStore();
+  
+  // Get parent idea if exists
+  const parentIdea = activeTask.parentId ? tasks.find(t => t.id === activeTask.parentId) : null;
+  const parentProgress = parentIdea ? getProgress(parentIdea.id) : null;
 
   // Fullscreen effect
   useState(() => {
@@ -45,6 +49,29 @@ export const FocusMode = ({ activeTask, onComplete, onExit }: FocusModeProps) =>
       </div>
 
       <FocusTimer />
+
+      {/* Parent Idea Context */}
+      {parentIdea && (
+        <div className="mb-6 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2 text-blue-600 text-sm">
+            <FolderOpen size={16} />
+            <span className="font-medium">{parentIdea.title}</span>
+          </div>
+          {parentProgress && parentProgress.total > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="w-32 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 transition-all duration-500"
+                  style={{ width: `${parentProgress.percentage}%` }}
+                />
+              </div>
+              <span className="text-xs text-zinc-500">
+                {parentProgress.completed}/{parentProgress.total} selesai
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 max-w-4xl leading-tight">
         {activeTask.title}

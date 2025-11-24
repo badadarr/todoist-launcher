@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTaskStore } from './store/useTaskStore';
-import { Inbox, Target, FileText } from 'lucide-react';
+import { Inbox, Target, FileText, FolderOpen } from 'lucide-react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { TaskInput } from './components/TaskInput';
 import { SectionHeader } from './components/SectionHeader';
@@ -8,16 +8,19 @@ import { FocusMode } from './components/FocusMode';
 import { TaskCard } from './components/TaskCard';
 import { AlertDialog } from './components/AlertDialog';
 import { ReputationBar } from './components/ReputationBar';
+import { AddSubIdeaModal } from './components/AddSubIdeaModal';
 
 // --- KOMPONEN MAIN APP ---
 function App() {
   const { 
     tasks, isFocusMode, activeTaskId, lockoutUntil,
-    addTask, moveToToday, moveToBacklog, startFocus, 
+    addTask, addSubIdea, moveToToday, moveToBacklog, startFocus, 
     completeTask, stopEarly, deleteTask, 
     alertDialog, clearAlert, exportTaskReport, shareCommitment, showAlert 
   } = useTaskStore();
   const [input, setInput] = useState('');
+  const [showSubIdeaModal, setShowSubIdeaModal] = useState(false);
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
 
   // Fullscreen effect
   useEffect(() => {
@@ -43,8 +46,10 @@ function App() {
     );
   }
 
-  const backlogTasks = tasks.filter(t => t.status === 'backlog');
-  const todayTasks = tasks.filter(t => t.status === 'today');
+  // Filter main ideas (always in backlog) and tasks (exclude done tasks)
+  const backlogMainIdeas = tasks.filter(t => t.status === 'backlog' && t.isMainIdea);
+  const backlogOrphanTasks = tasks.filter(t => t.status === 'backlog' && !t.isMainIdea && !t.parentId);
+  const todayTasks = tasks.filter(t => t.status === 'today' && !t.isMainIdea);
   const MAX_TODAY_TASKS = 3;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,6 +58,41 @@ function App() {
       addTask(input);
       setInput('');
     }
+  };
+
+  const handleSubmitMainIdea = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      addTask(input, true);
+      setInput('');
+    }
+  };
+
+  const handleAddSubIdea = (parentId: string) => {
+    setSelectedParentId(parentId);
+    setShowSubIdeaModal(true);
+  };
+
+  const handleAddSubIdeaSubmit = (title: string, estimatedMinutes?: number) => {
+    if (selectedParentId) {
+      addSubIdea(selectedParentId, title, estimatedMinutes);
+    }
+  };
+
+  const handleViewCompleted = (parentId: string) => {
+    const parentTask = tasks.find(t => t.id === parentId);
+    const completedSubIdeas = tasks.filter(t => t.parentId === parentId && t.status === 'done');
+    
+    if (completedSubIdeas.length === 0) {
+      showAlert('Belum Ada yang Selesai', 'Belum ada sub-idea yang diselesaikan.');
+      return;
+    }
+    
+    const completedList = completedSubIdeas.map((t, i) => `${i + 1}. ${t.title}`).join('\n');
+    showAlert(
+      `Selesai: ${parentTask?.title}`,
+      `Sub-ideas yang sudah dikerjakan:\n\n${completedList}`
+    );
   };
 
   return (
@@ -69,10 +109,41 @@ function App() {
           value={input}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
           onSubmit={handleSubmit}
+          onSubmitMainIdea={handleSubmitMainIdea}
+          placeholder="Apa yang ingin kamu kerjakan?"
         />
 
         <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-          {backlogTasks.map(task => (
+          {/* Main Ideas with Sub Ideas */}
+          {backlogMainIdeas.map(mainIdea => {
+            const subIdeas = tasks.filter(t => t.parentId === mainIdea.id && t.status !== 'done');
+            return (
+              <div key={mainIdea.id} className="space-y-2">
+                <TaskCard
+                  task={mainIdea}
+                  showBacklogActions={true}
+                  onDelete={deleteTask}
+                  onMoveToToday={moveToToday}
+                  onAddSubIdea={handleAddSubIdea}
+                  onViewCompleted={handleViewCompleted}
+                />
+                {/* Sub Ideas */}
+                {subIdeas.map(subIdea => (
+                  <div key={subIdea.id} className="ml-6 pl-4 border-l-2 border-zinc-800">
+                    <TaskCard
+                      task={subIdea}
+                      showBacklogActions={true}
+                      onDelete={deleteTask}
+                      onMoveToToday={moveToToday}
+                    />
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+          
+          {/* Orphan Tasks (without parent) */}
+          {backlogOrphanTasks.map(task => (
             <TaskCard
               key={task.id}
               task={task}
@@ -81,7 +152,8 @@ function App() {
               onMoveToToday={moveToToday}
             />
           ))}
-          {backlogTasks.length === 0 && (
+          
+          {backlogMainIdeas.length === 0 && backlogOrphanTasks.length === 0 && (
             <div className="text-center text-zinc-600 py-8 text-sm italic">
               Tidak ada tugas di gudang ide
             </div>
@@ -113,7 +185,34 @@ function App() {
         </div>
 
         <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-          {todayTasks.map(task => (
+          {/* Group tasks by parent */}
+          {backlogMainIdeas.map(mainIdea => {
+            const subIdeasInToday = tasks.filter(t => t.parentId === mainIdea.id && t.status === 'today' && t.status !== 'done');
+            if (subIdeasInToday.length === 0) return null;
+            
+            return (
+              <div key={mainIdea.id} className="space-y-2">
+                {/* Show parent info */}
+                <div className="flex items-center gap-2 text-xs text-zinc-600 px-3">
+                  <FolderOpen size={14} className="text-blue-400" />
+                  <span>{mainIdea.title}</span>
+                </div>
+                {/* Sub Ideas in Today */}
+                {subIdeasInToday.map(subIdea => (
+                  <div key={subIdea.id} className="ml-6 pl-4 border-l-2 border-blue-500/30">
+                    <TaskCard
+                      task={subIdea}
+                      onMoveToBacklog={moveToBacklog}
+                      onStartFocus={startFocus}
+                    />
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+          
+          {/* Tasks without parent */}
+          {todayTasks.filter(t => !t.parentId).map(task => (
             <TaskCard
               key={task.id}
               task={task}
@@ -142,6 +241,13 @@ function App() {
         onClose={clearAlert}
         title={alertDialog?.title || ''}
         content={alertDialog?.content || ''}
+      />
+
+      <AddSubIdeaModal
+        isOpen={showSubIdeaModal}
+        onClose={() => setShowSubIdeaModal(false)}
+        onAdd={handleAddSubIdeaSubmit}
+        parentTitle={tasks.find(t => t.id === selectedParentId)?.title || ''}
       />
     </div>
   );

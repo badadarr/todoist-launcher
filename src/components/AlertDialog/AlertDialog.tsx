@@ -14,7 +14,7 @@ export const AlertDialog = ({ isOpen, onClose, title, content }: AlertDialogProp
     if (title.includes('TERKUNCI')) return <Lock size={20} className="text-red-500" />;
     if (title.includes('BERKURANG') || title.includes('STOP')) return <AlertTriangle size={20} className="text-yellow-500" />;
     if (title.includes('tercatat')) return <FileCheck size={20} className="text-blue-500" />;
-    if (title.includes('Tersalin') || title.includes('Laporan')) return <CheckCircle2 size={20} className="text-green-500" />;
+    if (title.includes('Selesai:') || title.includes('Tersalin') || title.includes('Laporan')) return <CheckCircle2 size={20} className="text-green-500" />;
     if (title.includes('Gagal') || title.includes('Error')) return <XCircle size={20} className="text-red-500" />;
     return <CheckCircle2 size={20} className="text-blue-500" />;
   };
